@@ -1,142 +1,135 @@
 # NIBE DVC 10 CO2-based Ventilation Automation
-# Copy this to your automations.yaml or import via UI
+# Append this to your automations.yaml
 #
 # Logic:
 # - Night (22:00-07:00): Ventilation OFF
 # - Day: Adjust speed based on CO2 (Low <800, Medium 800-1000, High >1000)
 # - Emergency: If CO2 >1500 at night, turn on for 30 min
 
-automation:
-  # === NOAPTEA: Oprește ventilația la 22:00 ===
-  - alias: "NIBE DVC10 - Night Off"
-    id: nibe_dvc10_night_off
-    description: "Turn off ventilation at night"
-    trigger:
-      - platform: time
-        at: "22:00:00"
-    action:
-      - service: switch.turn_off
-        target:
-          entity_id: switch.nibe_dvc_10_power
-
-  # === DIMINEAȚA: Pornește ventilația la 07:00 ===
-  - alias: "NIBE DVC10 - Morning On"
-    id: nibe_dvc10_morning_on
-    description: "Turn on ventilation in the morning at low speed"
-    trigger:
-      - platform: time
-        at: "07:00:00"
-    action:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.nibe_dvc_10_power
-      - delay: "00:00:02"
-      - service: select.select_option
-        target:
-          entity_id: select.nibe_dvc_10_fan_speed
-        data:
-          option: "Low"
-
-  # === CO2 RIDICAT (>1000): Ventilație HIGH ===
-  - alias: "NIBE DVC10 - CO2 High"
-    id: nibe_dvc10_co2_high
-    description: "Set fan to high when CO2 > 1000 ppm"
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.i_9psl_carbon_dioxide
-        above: 1000
-        for: "00:02:00"
-    condition:
-      - condition: time
-        after: "07:00:00"
-        before: "22:00:00"
-      - condition: state
+- alias: "NIBE DVC10 - Night Off"
+  id: nibe_dvc10_night_off
+  description: "Turn off ventilation at night"
+  trigger:
+    - platform: time
+      at: "22:00:00"
+  action:
+    - service: switch.turn_off
+      target:
         entity_id: switch.nibe_dvc_10_power
-        state: "on"
-    action:
-      - service: select.select_option
-        target:
-          entity_id: select.nibe_dvc_10_fan_speed
-        data:
-          option: "High"
 
-  # === CO2 MEDIU (800-1000): Ventilație MEDIUM ===
-  - alias: "NIBE DVC10 - CO2 Medium"
-    id: nibe_dvc10_co2_medium
-    description: "Set fan to medium when CO2 between 800-1000 ppm"
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.i_9psl_carbon_dioxide
-        below: 1000
-    condition:
-      - condition: numeric_state
-        entity_id: sensor.i_9psl_carbon_dioxide
-        above: 800
-      - condition: time
-        after: "07:00:00"
-        before: "22:00:00"
-      - condition: state
+- alias: "NIBE DVC10 - Morning On"
+  id: nibe_dvc10_morning_on
+  description: "Turn on ventilation in the morning at low speed"
+  trigger:
+    - platform: time
+      at: "07:00:00"
+  action:
+    - service: switch.turn_on
+      target:
         entity_id: switch.nibe_dvc_10_power
-        state: "on"
-    action:
-      - delay: "00:05:00"
-      - condition: numeric_state
-        entity_id: sensor.i_9psl_carbon_dioxide
-        below: 1000
-        above: 800
-      - service: select.select_option
-        target:
-          entity_id: select.nibe_dvc_10_fan_speed
-        data:
-          option: "Medium"
+    - delay: "00:00:02"
+    - service: select.select_option
+      target:
+        entity_id: select.nibe_dvc_10_fan_speed
+      data:
+        option: "Low"
 
-  # === CO2 OK (<800): Ventilație LOW ===
-  - alias: "NIBE DVC10 - CO2 Low"
-    id: nibe_dvc10_co2_low
-    description: "Set fan to low when CO2 < 800 ppm"
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.i_9psl_carbon_dioxide
-        below: 800
-        for: "00:05:00"
-    condition:
-      - condition: time
-        after: "07:00:00"
-        before: "22:00:00"
-      - condition: state
+- alias: "NIBE DVC10 - CO2 High"
+  id: nibe_dvc10_co2_high
+  description: "Set fan to high when CO2 > 1000 ppm"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.i_9psl_carbon_dioxide
+      above: 1000
+      for: "00:02:00"
+  condition:
+    - condition: time
+      after: "07:00:00"
+      before: "22:00:00"
+    - condition: state
+      entity_id: switch.nibe_dvc_10_power
+      state: "on"
+  action:
+    - service: select.select_option
+      target:
+        entity_id: select.nibe_dvc_10_fan_speed
+      data:
+        option: "High"
+
+- alias: "NIBE DVC10 - CO2 Medium"
+  id: nibe_dvc10_co2_medium
+  description: "Set fan to medium when CO2 between 800-1000 ppm"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.i_9psl_carbon_dioxide
+      below: 1000
+  condition:
+    - condition: numeric_state
+      entity_id: sensor.i_9psl_carbon_dioxide
+      above: 800
+    - condition: time
+      after: "07:00:00"
+      before: "22:00:00"
+    - condition: state
+      entity_id: switch.nibe_dvc_10_power
+      state: "on"
+  action:
+    - delay: "00:05:00"
+    - condition: numeric_state
+      entity_id: sensor.i_9psl_carbon_dioxide
+      below: 1000
+      above: 800
+    - service: select.select_option
+      target:
+        entity_id: select.nibe_dvc_10_fan_speed
+      data:
+        option: "Medium"
+
+- alias: "NIBE DVC10 - CO2 Low"
+  id: nibe_dvc10_co2_low
+  description: "Set fan to low when CO2 < 800 ppm"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.i_9psl_carbon_dioxide
+      below: 800
+      for: "00:05:00"
+  condition:
+    - condition: time
+      after: "07:00:00"
+      before: "22:00:00"
+    - condition: state
+      entity_id: switch.nibe_dvc_10_power
+      state: "on"
+  action:
+    - service: select.select_option
+      target:
+        entity_id: select.nibe_dvc_10_fan_speed
+      data:
+        option: "Low"
+
+- alias: "NIBE DVC10 - Emergency Night"
+  id: nibe_dvc10_emergency_night
+  description: "Emergency ventilation if CO2 > 1500 at night"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.i_9psl_carbon_dioxide
+      above: 1500
+      for: "00:05:00"
+  condition:
+    - condition: time
+      after: "22:00:00"
+      before: "07:00:00"
+  action:
+    - service: switch.turn_on
+      target:
         entity_id: switch.nibe_dvc_10_power
-        state: "on"
-    action:
-      - service: select.select_option
-        target:
-          entity_id: select.nibe_dvc_10_fan_speed
-        data:
-          option: "Low"
-
-  # === URGENȚĂ NOAPTE: CO2 foarte ridicat (>1500) ===
-  - alias: "NIBE DVC10 - Emergency Night"
-    id: nibe_dvc10_emergency_night
-    description: "Emergency ventilation if CO2 > 1500 at night"
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.i_9psl_carbon_dioxide
-        above: 1500
-        for: "00:05:00"
-    condition:
-      - condition: time
-        after: "22:00:00"
-        before: "07:00:00"
-    action:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.nibe_dvc_10_power
-      - delay: "00:00:02"
-      - service: select.select_option
-        target:
-          entity_id: select.nibe_dvc_10_fan_speed
-        data:
-          option: "Medium"
-      - delay: "00:30:00"
-      - service: switch.turn_off
-        target:
-          entity_id: switch.nibe_dvc_10_power
+    - delay: "00:00:02"
+    - service: select.select_option
+      target:
+        entity_id: select.nibe_dvc_10_fan_speed
+      data:
+        option: "Medium"
+    - delay: "00:30:00"
+    - service: switch.turn_off
+      target:
+        entity_id: switch.nibe_dvc_10_power
