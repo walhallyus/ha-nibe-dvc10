@@ -11,7 +11,7 @@
   description: "Turn off ventilation at night"
   trigger:
     - platform: time
-      at: "22:00:00"
+      at: "23:30:00"
   action:
     - service: switch.turn_off
       target:
@@ -22,7 +22,7 @@
   description: "Turn on ventilation in the morning at low speed"
   trigger:
     - platform: time
-      at: "07:00:00"
+      at: "09:00:00"
   action:
     - service: switch.turn_on
       target:
@@ -44,8 +44,8 @@
       for: "00:02:00"
   condition:
     - condition: time
-      after: "07:00:00"
-      before: "22:00:00"
+      after: "09:00:00"
+      before: "23:30:00"
     - condition: state
       entity_id: switch.nibe_dvc_10_power
       state: "on"
@@ -68,8 +68,8 @@
       entity_id: sensor.i_9psl_carbon_dioxide
       above: 800
     - condition: time
-      after: "07:00:00"
-      before: "22:00:00"
+      after: "09:00:00"
+      before: "23:30:00"
     - condition: state
       entity_id: switch.nibe_dvc_10_power
       state: "on"
@@ -95,8 +95,8 @@
       for: "00:05:00"
   condition:
     - condition: time
-      after: "07:00:00"
-      before: "22:00:00"
+      after: "09:00:00"
+      before: "23:30:00"
     - condition: state
       entity_id: switch.nibe_dvc_10_power
       state: "on"
