@@ -1,19 +1,20 @@
 # NIBE DVC 10 Home Assistant Integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-[![GitHub Release](https://img.shields.io/github/release/ergoliv/ha-nibe-dvc10.svg)](https://github.com/ergoliv/ha-nibe-dvc10/releases)
-[![License](https://img.shields.io/github/license/ergoliv/ha-nibe-dvc10.svg)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/release/walhallyus/ha-nibe-dvc10.svg)](https://github.com/walhallyus/ha-nibe-dvc10/releases)
+[![License](https://img.shields.io/github/license/walhallyus/ha-nibe-dvc10.svg)](LICENSE)
 
 Home Assistant custom integration for **NIBE DVC 10** heat recovery ventilation units.
 
 ## Features
 
 - 🔌 **On/Off control** - Turn the unit on or off
-- 💨 **Fan speed control** - Low, Medium, High
-- 🌙 **Mode selection** - Day, Night, Party modes
+- 💨 **Fan speed control** - Low, Medium, High (via dropdown)
+- 🌙 **Mode selection** - Day, Night modes
 - 🔄 **Airflow direction** - One-way out, Two-way (recovery), One-way in
-- 📊 **Status sensors** - Current state, temperature readings
-- 🔧 **Multiple units support** - Control multiple DVC 10 units
+- 📊 **Status sensors** - Current state and fan speed
+- 🔧 **Multiple units support** - Control multiple DVC 10 units (master/slave)
+- 🤖 **CO2 automation** - Ready-to-use automation based on air quality
 
 ## Supported Hardware
 
@@ -28,7 +29,7 @@ Home Assistant custom integration for **NIBE DVC 10** heat recovery ventilation 
 1. Open HACS in Home Assistant
 2. Click on "Integrations"
 3. Click the three dots menu → "Custom repositories"
-4. Add this repository URL: `https://github.com/ergoliv/ha-nibe-dvc10`
+4. Add this repository URL: `https://github.com/walhallyus/ha-nibe-dvc10`
 5. Select "Integration" as the category
 6. Click "Add"
 7. Search for "NIBE DVC 10" and install
@@ -36,9 +37,14 @@ Home Assistant custom integration for **NIBE DVC 10** heat recovery ventilation 
 
 ### Manual Installation
 
-1. Download the `custom_components/nibe_dvc10` folder
-2. Copy it to your Home Assistant `config/custom_components/` directory
-3. Restart Home Assistant
+```bash
+cd /config/custom_components
+mkdir -p nibe_dvc10
+cd nibe_dvc10
+curl -sL https://github.com/walhallyus/ha-nibe-dvc10/archive/main.tar.gz | tar xz --strip=3 "ha-nibe-dvc10-main/custom_components/nibe_dvc10/"
+```
+
+Then restart Home Assistant.
 
 ## Configuration
 
@@ -47,19 +53,8 @@ Home Assistant custom integration for **NIBE DVC 10** heat recovery ventilation 
 1. Go to **Settings** → **Devices & Services**
 2. Click **+ Add Integration**
 3. Search for "NIBE DVC 10"
-4. Enter the IP address of your unit
+4. Enter the IP address of your unit (master if using master/slave setup)
 5. Optionally set a custom name
-
-### Via YAML (Alternative)
-
-```yaml
-# configuration.yaml
-nibe_dvc10:
-  - host: 192.168.1.20
-    name: "Living Room Ventilation"
-  - host: 192.168.1.21
-    name: "Bedroom Ventilation"
-```
 
 ## Entities Created
 
@@ -67,49 +62,49 @@ For each configured unit, the following entities are created:
 
 | Entity | Type | Description |
 |--------|------|-------------|
-| `fan.nibe_dvc10_<name>` | Fan | Main fan control with speed presets |
-| `switch.nibe_dvc10_<name>` | Switch | On/Off control |
-| `select.nibe_dvc10_<name>_mode` | Select | Day/Night/Party mode |
-| `select.nibe_dvc10_<name>_airflow` | Select | Airflow direction |
-| `sensor.nibe_dvc10_<name>_status` | Sensor | Current operational status |
+| `switch.nibe_dvc_10_power` | Switch | On/Off control |
+| `select.nibe_dvc_10_fan_speed` | Select | Fan speed (Low/Medium/High) |
+| `select.nibe_dvc_10_mode` | Select | Day/Night mode |
+| `select.nibe_dvc_10_airflow_direction` | Select | Airflow direction |
+| `sensor.nibe_dvc_10_status` | Sensor | Current operational status |
+| `sensor.nibe_dvc_10_fan_speed` | Sensor | Current fan speed (read-only) |
+| `fan.nibe_dvc_10_fan` | Fan | Fan entity with presets |
 
-## Services
+## CO2-Based Automation
 
-### `nibe_dvc10.set_fan_speed`
+An optional automation is included that adjusts ventilation based on CO2 levels from an air quality sensor (e.g., AirGradient).
 
-Set the fan speed directly.
+### Installation
 
-```yaml
-service: nibe_dvc10.set_fan_speed
-target:
-  entity_id: fan.nibe_dvc10_living_room
-data:
-  speed: medium  # low, medium, high
+```bash
+cd /config
+curl -sL https://raw.githubusercontent.com/walhallyus/ha-nibe-dvc10/main/automations/co2_ventilation.yaml > automations.yaml
 ```
 
-### `nibe_dvc10.set_mode`
-
-Set the operating mode.
-
-```yaml
-service: nibe_dvc10.set_mode
-target:
-  entity_id: fan.nibe_dvc10_living_room
-data:
-  mode: night  # day, night, party
+Or append to existing automations:
+```bash
+curl -sL https://raw.githubusercontent.com/walhallyus/ha-nibe-dvc10/main/automations/co2_ventilation.yaml >> automations.yaml
 ```
 
-### `nibe_dvc10.set_airflow`
+Then reload automations in **Developer Tools → YAML → Reload Automations**.
 
-Set the airflow direction.
+### Automation Logic
 
-```yaml
-service: nibe_dvc10.set_airflow
-target:
-  entity_id: fan.nibe_dvc10_living_room
-data:
-  airflow: twoway  # oneway_out, twoway, oneway_in
-```
+| Time | CO2 Level | Action |
+|------|-----------|--------|
+| 09:00 | - | Turn ON, set to Low |
+| 09:00-23:30 | < 800 ppm | Low speed |
+| 09:00-23:30 | 800-1000 ppm | Medium speed |
+| 09:00-23:30 | > 1000 ppm | High speed |
+| 23:30 | - | Turn OFF |
+| Night | > 1500 ppm | Emergency: ON for 30 min |
+
+### Customization
+
+Edit the automation file to change:
+- Schedule times (default: ON at 09:00, OFF at 23:30)
+- CO2 thresholds (default: 800/1000/1500 ppm)
+- CO2 sensor entity ID (default: `sensor.i_9psl_carbon_dioxide`)
 
 ## Protocol Documentation
 
@@ -149,7 +144,7 @@ Response is 36 bytes with key positions:
 
 ### Connection timeout
 
-The integration has a 1-second timeout. If your network is slow, the unit might not respond in time.
+The integration has a 2-second timeout. If your network is slow, increase `DEFAULT_TIMEOUT` in `const.py`.
 
 ## Credits
 
