@@ -2,7 +2,7 @@
 # Append this to your automations.yaml
 #
 # Logic:
-# - Night (22:00-07:00): Ventilation OFF
+# - Night (23:30-09:00): Ventilation OFF
 # - Day: Adjust speed based on CO2 (Low <800, Medium 800-1000, High >1000)
 # - Emergency: If CO2 >1500 at night, turn on for 30 min
 
