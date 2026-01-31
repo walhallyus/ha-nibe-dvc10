@@ -1,0 +1,11 @@
+{
+  "domain": "nibe_dvc10",
+  "name": "NIBE DVC 10",
+  "codeowners": ["@ergoliv"],
+  "config_flow": true,
+  "documentation": "https://github.com/ergoliv/ha-nibe-dvc10",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/ergoliv/ha-nibe-dvc10/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}
