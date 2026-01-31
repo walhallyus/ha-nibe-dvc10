@@ -16,6 +16,9 @@ from .const import (
     AIRFLOW_OUT,
     AIRFLOW_RECOVERY,
     DOMAIN,
+    FAN_SPEED_HIGH,
+    FAN_SPEED_LOW,
+    FAN_SPEED_MEDIUM,
     MODE_DAY,
     MODE_NAMES,
     MODE_NIGHT,
@@ -36,6 +39,7 @@ async def async_setup_entry(
     async_add_entities([
         NibeDVC10ModeSelect(coordinator),
         NibeDVC10AirflowSelect(coordinator),
+        NibeDVC10FanSpeedSelect(coordinator),
     ])
 
 
@@ -105,3 +109,41 @@ class NibeDVC10AirflowSelect(CoordinatorEntity[NibeDVC10Coordinator], SelectEnti
         }
         if option in option_map:
             await self.coordinator.async_set_airflow(option_map[option])
+
+
+class NibeDVC10FanSpeedSelect(CoordinatorEntity[NibeDVC10Coordinator], SelectEntity):
+    """Representation of NIBE DVC 10 fan speed selector."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Fan Speed"
+    _attr_options = ["Low", "Medium", "High"]
+    _attr_icon = "mdi:fan"
+
+    def __init__(self, coordinator: NibeDVC10Coordinator) -> None:
+        """Initialize the select entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.host}_fan_speed_select"
+        self._attr_device_info = coordinator.device_info
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current fan speed."""
+        if self.coordinator.data is None:
+            return None
+        speed = self.coordinator.data.fan_speed
+        speed_map = {
+            FAN_SPEED_LOW: "Low",
+            FAN_SPEED_MEDIUM: "Medium",
+            FAN_SPEED_HIGH: "High",
+        }
+        return speed_map.get(speed, "Low")
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the fan speed."""
+        speed_map = {
+            "Low": FAN_SPEED_LOW,
+            "Medium": FAN_SPEED_MEDIUM,
+            "High": FAN_SPEED_HIGH,
+        }
+        if option in speed_map:
+            await self.coordinator.async_set_fan_speed(speed_map[option])

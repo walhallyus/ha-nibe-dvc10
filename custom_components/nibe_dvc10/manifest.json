@@ -7,5 +7,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/ergoliv/ha-nibe-dvc10/issues",
   "requirements": [],
-  "version": "1.0.0"
+  "version": "1.1.0"
 }
