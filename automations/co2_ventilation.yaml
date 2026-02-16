@@ -3,7 +3,7 @@
 #
 # Logic:
 # - Night (23:30-09:00): Ventilation OFF
-# - Day: Adjust speed based on CO2 (Low <800, Medium 800-1000, High >1000)
+# - Day: Adjust speed based on CO2 (Low <400, Medium 400-1000, High >1000)
 # - Emergency: If CO2 >1500 at night, turn on for 30 min
 
 - alias: "NIBE DVC10 - Night Off"
@@ -58,7 +58,7 @@
 
 - alias: "NIBE DVC10 - CO2 Medium"
   id: nibe_dvc10_co2_medium
-  description: "Set fan to medium when CO2 between 800-1000 ppm"
+  description: "Set fan to medium when CO2 between 400-1000 ppm"
   trigger:
     - platform: numeric_state
       entity_id: sensor.i_9psl_carbon_dioxide
@@ -66,7 +66,7 @@
   condition:
     - condition: numeric_state
       entity_id: sensor.i_9psl_carbon_dioxide
-      above: 800
+      above: 400
     - condition: time
       after: "09:00:00"
       before: "23:30:00"
@@ -78,7 +78,7 @@
     - condition: numeric_state
       entity_id: sensor.i_9psl_carbon_dioxide
       below: 1000
-      above: 800
+      above: 400
     - service: select.select_option
       target:
         entity_id: select.nibe_dvc_10_fan_speed
@@ -87,11 +87,11 @@
 
 - alias: "NIBE DVC10 - CO2 Low"
   id: nibe_dvc10_co2_low
-  description: "Set fan to low when CO2 < 800 ppm"
+  description: "Set fan to low when CO2 < 400 ppm"
   trigger:
     - platform: numeric_state
       entity_id: sensor.i_9psl_carbon_dioxide
-      below: 800
+      below: 400
       for: "00:05:00"
   condition:
     - condition: time
